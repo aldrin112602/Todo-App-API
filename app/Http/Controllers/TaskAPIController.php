@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Exception;
 
 class TaskAPIController extends Controller
@@ -16,7 +17,7 @@ class TaskAPIController extends Controller
             $tasks = Task::all();
             return response()->json($tasks);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to fetch tasks', 'message' => $e->getMessage()], 500);
+            return $this->handleException($e, 'Failed to fetch tasks');
         }
     }
 
@@ -26,15 +27,12 @@ class TaskAPIController extends Controller
         try {
             $request->validate([
                 'title' => 'required|string|max:255',
-                'isCompleted' => 'required',
             ]);
 
             $task = Task::create($request->all());
             return response()->json($task, 201);
-        } catch (ValidationException $e) {
-            return response()->json(['errors' => $e->errors()], 422);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to create task', 'message' => $e->getMessage()], 500);
+            return $this->handleException($e, 'Failed to create task');
         }
     }
 
@@ -44,10 +42,8 @@ class TaskAPIController extends Controller
         try {
             $task = Task::findOrFail($id);
             return response()->json($task);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Task not found'], 404);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to fetch task', 'message' => $e->getMessage()], 500);
+            return $this->handleException($e, 'Failed to fetch task');
         }
     }
 
@@ -56,21 +52,14 @@ class TaskAPIController extends Controller
     {
         try {
             $task = Task::findOrFail($id);
-            Log::info("Task ID: $id");
-
             $request->validate([
                 'title' => 'required|string|max:255',
-                'isCompleted' => 'required',
             ]);
 
             $task->update($request->all());
             return response()->json($task);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Task not found'], 404);
-        } catch (ValidationException $e) {
-            return response()->json(['errors' => $e->errors()], 422);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to update task', 'message' => $e->getMessage()], 500);
+            return $this->handleException($e, 'Failed to update task');
         }
     }
 
@@ -79,14 +68,24 @@ class TaskAPIController extends Controller
     {
         try {
             $task = Task::findOrFail($id);
-            Log::info("Task ID: $id");
-            
             $task->delete();
             return response()->json(['message' => 'Task deleted successfully']);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Task not found'], 404);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to delete task', 'message' => $e->getMessage()], 500);
+            return $this->handleException($e, 'Failed to delete task');
         }
+    }
+
+    // Handle exceptions
+    private function handleException(Exception $e, $defaultMessage)
+    {
+        if ($e instanceof ValidationException) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
+
+        if ($e instanceof ModelNotFoundException) {
+            return response()->json(['message' => 'Task not found'], 404);
+        }
+
+        return response()->json(['error' => $defaultMessage, 'message' => $e->getMessage()], 500);
     }
 }
