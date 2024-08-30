@@ -3,12 +3,12 @@
 
 ```bash
 # Get ip address first
-ipconfig #192.168.1.89
+ipconfig #192.***.1.8*
 
 # Run server
-php artisan serve --host 192.168.1.89 --port 3000
+php artisan serve --host 192.***.1.8* --port 3000
 
-http://192.168.1.89:3000/ # BASE URL
+http://192.***.1.8*:3000/ # BASE URL
 
 # API endpoints
 /api/tasks      # [GET, POST]
