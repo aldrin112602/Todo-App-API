@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Exception;
 
 class TaskAPIController extends Controller
@@ -75,17 +73,4 @@ class TaskAPIController extends Controller
         }
     }
 
-    // Handle exceptions
-    private function handleException(Exception $e, $defaultMessage)
-    {
-        if ($e instanceof ValidationException) {
-            return response()->json(['errors' => $e->errors()], 422);
-        }
-
-        if ($e instanceof ModelNotFoundException) {
-            return response()->json(['message' => 'Task not found'], 404);
-        }
-
-        return response()->json(['error' => $defaultMessage, 'message' => $e->getMessage()], 500);
-    }
 }
